@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Solitaire</title>
+<meta name="description" content="Solitaire Klondike jouable directement dans le navigateur.">
+<meta name="theme-color" content="#0d3b2e">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="barre">
+  <h1>Solitaire</h1>
+  <div class="scores">
+    <div class="score">
+      <span class="score-nom">Score</span>
+      <span class="score-valeur" id="score">0</span>
+    </div>
+    <div class="score">
+      <span class="score-nom">Coups</span>
+      <span class="score-valeur" id="coups">0</span>
+    </div>
+    <div class="score">
+      <span class="score-nom">Temps</span>
+      <span class="score-valeur" id="temps">0:00</span>
+    </div>
+  </div>
+  <div class="infos">
+    <span id="info-fondations">0 / 52 cartes placées</span>
+    <div class="choix-tirage" role="group" aria-label="Mode de tirage">
+      <button type="button" class="lien" id="btn-tirage-1" data-tirage="1">Tirage 1</button>
+      <button type="button" class="lien" id="btn-tirage-3" data-tirage="3">Tirage 3</button>
+    </div>
+  </div>
+  <div class="actions-barre">
+    <button type="button" class="lien" id="btn-annuler">Annuler</button>
+    <button type="button" class="lien" id="btn-indice">Indice</button>
+    <button type="button" class="lien" id="btn-nouvelle">Nouvelle partie</button>
+    <button type="button" class="lien" id="btn-regles">Règles</button>
+  </div>
+</header>
+
+<main class="tapis" id="tapis">
+  <div class="rangee-haute">
+    <div class="pioche">
+      <div class="pile pile-talon" id="talon" data-zone="talon" role="button" tabindex="0"
+           aria-label="Talon : piocher"></div>
+      <div class="pile pile-defausse" id="defausse" data-zone="defausse" aria-label="Défausse"></div>
+    </div>
+    <div class="fondations" id="fondations"></div>
+  </div>
+  <div class="colonnes" id="colonnes"></div>
+</main>
+
+<section class="panneau panneau-large" id="panneau-fin" hidden>
+  <p class="panneau-titre" id="fin-titre"></p>
+  <p id="fin-detail"></p>
+  <div class="panneau-actions">
+    <button type="button" class="bouton" id="btn-annuler-fin">Annuler le dernier coup</button>
+    <button type="button" class="bouton principal" id="btn-rejouer">Nouvelle partie</button>
+  </div>
+</section>
+
+<aside class="journal" id="journal" aria-live="polite"></aside>
+
+<dialog id="dlg-regles">
+  <h2>Règles appliquées</h2>
+  <ul>
+    <li>Jeu de 52 cartes. Sept colonnes reçoivent 1, 2, … 7 cartes ; seule la dernière de chaque colonne est retournée. Les 24 cartes restantes forment le <strong>talon</strong>.</li>
+    <li>But : monter les quatre <strong>fondations</strong>, une par enseigne, de l'as au roi.</li>
+    <li>Sur le <strong>tableau</strong>, on empile en descendant et en alternant les couleurs (un 9 rouge sur un 10 noir). Une colonne vide n'accepte qu'un roi.</li>
+    <li>Une suite déjà ordonnée se déplace d'un bloc, en prenant la carte par laquelle on veut l'attraper.</li>
+    <li>Découvrir la carte du bas d'une colonne la retourne aussitôt.</li>
+    <li>Le talon se tire carte par carte ou <strong>par trois</strong>, au choix ; seule la carte du dessus de la défausse est jouable. Le talon épuisé se recharge avec la défausse, autant de fois qu'on veut.</li>
+    <li>Une carte peut redescendre d'une fondation vers le tableau si elle y est utile.</li>
+    <li><strong>Score</strong> : +10 par carte montée sur une fondation, +5 pour une carte de la défausse posée sur le tableau, +5 par carte retournée, −15 pour une carte redescendue d'une fondation, et −100 (tirage 1) ou −20 (tirage 3) à chaque rechargement du talon. Le score ne descend pas sous zéro.</li>
+    <li><strong>Jouer</strong> : un clic envoie la carte à sa place évidente — la fondation d'abord, sinon une colonne ; le glisser-déposer permet de choisir soi-même la destination. <em>Annuler</em> revient en arrière sans limite, <em>Indice</em> montre un coup utile.</li>
+  </ul>
+  <button type="button" class="bouton" id="btn-fermer-regles">Fermer</button>
+</dialog>
+
+<script type="module" src="src/ui.js"></script>
+</body>
+</html>

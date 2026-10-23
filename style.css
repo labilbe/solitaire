@@ -1,0 +1,324 @@
+:root {
+  --l-carte: 84px;
+  --h-carte: 122px;
+  --pas-cache: 14px;      /* décalage entre deux cartes face cachée */
+  --pas-visible: 28px;    /* décalage entre deux cartes visibles */
+  --feutre: #0d3b2e;
+  --feutre-clair: #175843;
+  --or: #d9b45b;
+  --creme: #f3ecdc;
+  --rouge: #c0392b;
+  --noir: #1d1d1d;
+  --ombre: 0 6px 16px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: var(--creme);
+  background:
+    radial-gradient(ellipse at 50% 38%, var(--feutre-clair) 0%, var(--feutre) 62%, #07231b 100%);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* ------------------------------------------------------------ En-tête */
+
+.barre {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0.6rem 1.2rem;
+  background: rgba(0, 0, 0, 0.28);
+  border-bottom: 1px solid rgba(217, 180, 91, 0.25);
+  flex-wrap: wrap;
+}
+
+.barre h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.06em;
+  color: var(--or);
+}
+
+.scores {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.score { display: flex; flex-direction: column; line-height: 1.1; }
+.score-nom { font-size: 0.7rem; opacity: 0.75; }
+.score-valeur { font-size: 1.25rem; font-weight: 600; }
+.score:first-child .score-valeur { color: var(--or); }
+
+.infos {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-left: auto;
+  font-size: 0.85rem;
+  opacity: 0.9;
+  flex-wrap: wrap;
+}
+
+.choix-tirage { display: flex; gap: 0.25rem; }
+.actions-barre { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.lien {
+  background: none;
+  border: 1px solid rgba(217, 180, 91, 0.5);
+  color: var(--or);
+  border-radius: 999px;
+  padding: 0.25rem 0.8rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+}
+.lien:hover:not(:disabled) { background: rgba(217, 180, 91, 0.15); }
+.lien:disabled { opacity: 0.35; cursor: default; }
+.lien.actif {
+  background: var(--or);
+  border-color: var(--or);
+  color: #1a2b22;
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------------- Tapis */
+
+.tapis {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  padding: 1.2rem 1rem 2rem;
+  width: 100%;
+  max-width: calc(var(--l-carte) * 7 + 6 * 0.9rem + 2rem);
+  margin: 0 auto;
+}
+
+.rangee-haute {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+.pioche, .fondations { display: flex; gap: 0.9rem; }
+
+.colonnes {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.9rem;
+  align-items: start;
+}
+
+/* Emplacements : un cadre discret, visible quand la pile est vide. */
+.pile, .colonne {
+  position: relative;
+  width: var(--l-carte);
+  min-height: var(--h-carte);
+  border-radius: 7px;
+}
+.pile::before, .colonne::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  height: var(--h-carte);
+  border: 1px dashed rgba(243, 236, 220, 0.22);
+  border-radius: 7px;
+}
+.pile-fondation::before {
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+  color: rgba(243, 236, 220, 0.18);
+  content: attr(data-enseigne);
+}
+.pile-talon { cursor: pointer; }
+.pile-talon.vide.rechargeable::before {
+  border-style: solid;
+  border-color: rgba(217, 180, 91, 0.55);
+  content: "↻";
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  color: var(--or);
+}
+.pile-talon.vide:not(.rechargeable) { cursor: default; }
+.colonne { min-height: calc(var(--h-carte) + var(--pas-visible) * 2); }
+
+/* Cible d'un dépôt pendant le glissement. */
+.cible::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 7px;
+  box-shadow: 0 0 0 2px var(--or), 0 0 18px rgba(217, 180, 91, 0.55);
+  pointer-events: none;
+}
+.colonne.cible::after { height: 100%; }
+
+/* -------------------------------------------------------------- Cartes */
+
+.carte {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--l-carte);
+  height: var(--h-carte);
+  border-radius: 7px;
+  background: #fdfbf5;
+  box-shadow: var(--ombre);
+  color: var(--noir);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  overflow: hidden;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.carte.rouge { color: var(--rouge); }
+
+.carte .face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.carte.dos {
+  background: repeating-linear-gradient(45deg, #8c2c2c 0 6px, #6f2020 6px 12px);
+  border: 3px solid #fdfbf5;
+}
+
+.carte.prenable { cursor: grab; }
+.carte.prenable:hover, .carte.prenable:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(217, 180, 91, 0.75), var(--ombre);
+}
+.carte.en-vol { opacity: 0.25; }
+.carte.conseil {
+  box-shadow: 0 0 0 2px var(--or), 0 0 22px rgba(217, 180, 91, 0.8), var(--ombre);
+  animation: conseil 0.9s ease-in-out 3;
+}
+@keyframes conseil {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+.carte.posee { animation: pose 0.18s ease-out; }
+@keyframes pose {
+  from { opacity: 0; scale: 0.94; }
+  to { opacity: 1; scale: 1; }
+}
+
+/* La pile glissée suit le pointeur, au-dessus du tapis. */
+.vol {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  width: var(--l-carte);
+}
+.vol .carte { box-shadow: 0 14px 28px rgba(0, 0, 0, 0.5); transform: rotate(1.5deg); }
+
+/* Le talon : une épaisseur suggérée par quelques dos décalés. */
+.pile-talon .carte { left: 0; }
+.pile-defausse .carte { left: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .carte, .carte.posee, .carte.conseil { animation: none; transition: none; }
+}
+
+/* ------------------------------------------------------------ Panneaux */
+
+.panneau {
+  position: fixed;
+  left: 50%;
+  bottom: 50%;
+  transform: translate(-50%, 50%);
+  background: rgba(8, 32, 25, 0.96);
+  border: 1px solid var(--or);
+  border-radius: 14px;
+  padding: 1rem 1.4rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  z-index: 60;
+  max-width: min(92vw, 520px);
+}
+.panneau-titre { margin: 0 0 0.8rem; font-size: 1.05rem; font-weight: 600; color: var(--or); }
+.panneau p { margin: 0 0 1rem; }
+.panneau-actions { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+
+.bouton {
+  font: inherit;
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(243, 236, 220, 0.4);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--creme);
+  cursor: pointer;
+}
+.bouton:hover { background: rgba(255, 255, 255, 0.16); }
+.bouton.principal {
+  background: var(--or);
+  border-color: var(--or);
+  color: #1a2b22;
+  font-weight: 600;
+}
+.bouton.principal:hover { background: #e7c976; }
+
+/* ------------------------------------------------------------- Journal */
+
+.journal {
+  position: fixed;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  width: min(250px, 42vw);
+  max-height: 9.5rem;
+  overflow: hidden;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  opacity: 0.75;
+  pointer-events: none;
+  text-align: right;
+}
+.journal p { margin: 0; }
+
+dialog {
+  border: 1px solid var(--or);
+  border-radius: 14px;
+  background: #0b2c22;
+  color: var(--creme);
+  max-width: min(92vw, 560px);
+  padding: 1.4rem;
+}
+dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
+dialog h2 { margin-top: 0; color: var(--or); font-family: Georgia, serif; }
+dialog ul { padding-left: 1.1rem; line-height: 1.55; font-size: 0.9rem; }
+dialog li { margin-bottom: 0.4rem; }
+
+/* ---------------------------------------------------------- Responsive */
+
+@media (max-width: 900px) {
+  :root { --l-carte: 68px; --h-carte: 99px; --pas-cache: 11px; --pas-visible: 23px; }
+  .tapis { gap: 1rem; padding: 0.8rem 0.6rem 1.6rem; }
+  .pioche, .fondations, .colonnes, .rangee-haute { gap: 0.5rem; }
+  .journal { display: none; }
+}
+
+@media (max-width: 680px) {
+  :root { --l-carte: 46px; --h-carte: 67px; --pas-cache: 8px; --pas-visible: 16px; }
+  .barre { gap: 0.6rem; padding: 0.5rem 0.7rem; }
+  .barre h1 { font-size: 1.15rem; }
+  .infos { font-size: 0.78rem; }
+  .pioche, .fondations, .colonnes, .rangee-haute { gap: 0.35rem; }
+  .tapis { padding: 0.6rem 0.4rem 1.2rem; }
+}

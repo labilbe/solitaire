@@ -1,0 +1,12 @@
+{
+  "name": "solitaire",
+  "version": "1.0.0",
+  "description": "Solitaire Klondike jouable dans le navigateur, moteur pur en JS vanilla",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "npx --yes serve . -l 1986",
+    "test": "node --test"
+  },
+  "license": "MIT"
+}
