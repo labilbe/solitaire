@@ -81,8 +81,21 @@ function origineDe(el) {
 
 // ----------------------------------------------------------------- Rendu
 
+/**
+ * Une pile n'est refaite que si son contenu a changé : sans cela, piocher rebâtirait
+ * aussi les fondations et les colonnes, qui rejoueraient leur animation de pose.
+ * La signature décrit tout ce que le rendu de la pile dépend.
+ */
+function aChange(zone, signature) {
+  const complete = `${signature}|${PETITES_CARTES.matches}`;
+  if (zone.dataset.signature === complete) return false;
+  zone.dataset.signature = complete;
+  return true;
+}
+
 function rendreTalon() {
   const zone = $('talon');
+  if (!aChange(zone, `${game.etat.talon.length}|${game.peutRecycler()}`)) return;
   zone.innerHTML = '';
   zone.classList.toggle('vide', game.etat.talon.length === 0);
   zone.classList.toggle('rechargeable', game.peutRecycler());
@@ -97,9 +110,10 @@ function rendreTalon() {
 
 function rendreDefausse() {
   const zone = $('defausse');
-  zone.innerHTML = '';
   // On montre les dernières cartes en éventail, mais seule celle du dessus est jouable.
   const visibles = game.etat.defausse.slice(-Math.min(3, game.tirage));
+  if (!aChange(zone, visibles.map((x) => x.id).join(','))) return;
+  zone.innerHTML = '';
   visibles.forEach((carte, i) => {
     const dernier = i === visibles.length - 1;
     const el = elCarte(carte, { origine: dernier ? { zone: 'defausse' } : null });
@@ -112,9 +126,10 @@ function rendreDefausse() {
 function rendreFondations() {
   for (let pile = 0; pile < NB_FONDATIONS; pile++) {
     const zone = $('fondations').children[pile];
-    zone.innerHTML = '';
     const fondation = game.etat.fondations[pile];
     const carte = fondation[fondation.length - 1];
+    if (!aChange(zone, `${fondation.length}:${carte?.id ?? ''}`)) continue;
+    zone.innerHTML = '';
     if (carte) {
       const el = elCarte(carte, { origine: { zone: 'fondation', pile } });
       el.classList.add('posee');
@@ -130,6 +145,8 @@ function rendreColonnes() {
 
   game.etat.tableau.forEach((colonne, pile) => {
     const zone = $('colonnes').children[pile];
+    // Ce que montre une colonne — cartes, dos, prises possibles — ne tient qu'à elle.
+    if (!aChange(zone, `${colonne.cachees}:${colonne.cartes.map((x) => x.id).join(',')}`)) return;
     zone.innerHTML = '';
     let decalage = 0;
     colonne.cartes.forEach((carte, index) => {
@@ -186,6 +203,9 @@ function rendrePanneau() {
 }
 
 function rendre() {
+  // Les piles inchangées ne sont plus refaites : la mise en avant d'un indice doit
+  // donc être retirée explicitement.
+  for (const el of document.querySelectorAll('.carte.conseil')) el.classList.remove('conseil');
   rendreEntetes();
   rendreTalon();
   rendreDefausse();
